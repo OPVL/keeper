@@ -541,23 +541,23 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
                       if (_token.repositories.isEmpty)
                         const Text('No repositories added yet')
                       else
-                        ListView.builder(
+                        ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _token.repositories.length,
+                          separatorBuilder: (context, index) => const Divider(),
                           itemBuilder: (context, index) {
                             final repo = _token.repositories[index];
-                            return Card(
-                              child: ListTile(
-                                title: Text(
-                                  repo.path,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                subtitle: Text('Username: ${repo.username}'),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () => _removeRepository(index),
-                                ),
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                repo.path,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              subtitle: Text('Username: ${repo.username}'),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => _removeRepository(index),
                               ),
                             );
                           },
@@ -572,18 +572,18 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
                       if (_token.refreshHistory.isEmpty)
                         const Text('No refresh history')
                       else
-                        ListView.builder(
+                        ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _token.refreshHistory.length,
+                          separatorBuilder: (context, index) => const Divider(),
                           itemBuilder: (context, index) {
                             final refresh = _token.refreshHistory[index];
-                            return Card(
-                              child: ListTile(
-                                title: Text(refresh.formattedTimestamp),
-                                subtitle: Text(
-                                  'Previous token: ${TokenFormatter.obscureToken(refresh.previousToken)}',
-                                ),
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(refresh.formattedTimestamp),
+                              subtitle: Text(
+                                'Previous token: ${TokenFormatter.obscureToken(refresh.previousToken)}',
                               ),
                             );
                           },

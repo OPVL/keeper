@@ -215,108 +215,183 @@ class _AppWindowState extends State<AppWindow> {
                   itemCount: _tokens.length,
                   itemBuilder: (context, index) {
                     final token = _tokens[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        title: Row(
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TokenDetailsPage(token: token),
+                            settings: RouteSettings(
+                              arguments: widget.onDialogOpenChanged,
+                            ),
+                          ),
+                        ).then((_) => _loadTokens(updateFromRemote: false));
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: token.isValid 
+                                ? Colors.green.withOpacity(0.3)
+                                : Colors.red.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 2,
+                        child: Stack(
                           children: [
-                            Expanded(child: Text(token.name)),
-                            Text(
-                              TokenFormatter.obscureToken(token.token),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.color,
-                                fontFamily: 'monospace',
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        token.isValid ? Icons.check_circle : Icons.error,
+                                        color: token.isValid ? Colors.green : Colors.red,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          token.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 32.0), // Add padding for menu button
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            token.service,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context).primaryColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today,
+                                            size: 14,
+                                            color: Theme.of(context).textTheme.bodySmall?.color,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            token.isValid 
+                                                ? 'Valid until ${token.expiryDateOnly}'
+                                                : 'Expired',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: token.isValid
+                                                  ? Theme.of(context).textTheme.bodySmall?.color
+                                                  : Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        TokenFormatter.obscureToken(token.token),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context).textTheme.bodySmall?.color,
+                                          fontFamily: 'monospace',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert),
+                                onSelected: (value) async {
+                                  switch (value) {
+                                    case 'edit':
+                                      await _editToken(token);
+                                      break;
+                                    case 'delete':
+                                      await _deleteToken(token);
+                                      break;
+                                    case 'refresh':
+                                      await _refreshToken(token);
+                                      break;
+                                    case 'copy':
+                                      FlutterClipboard.copy(token.token).then((_) {
+                                        showAppNotification(
+                                            context, 'Token copied to clipboard');
+                                      });
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'copy',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.copy, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Copy'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'refresh',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.refresh, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Refresh'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('Delete'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        subtitle: Text(
-                          '${token.service} - ${token.isValid ? 'Valid until ${token.expiryFormatted}' : 'Expired'}',
-                        ),
-                        leading: Icon(
-                          token.isValid ? Icons.check_circle : Icons.error,
-                          color: token.isValid ? Colors.green : Colors.red,
-                        ),
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (value) async {
-                            switch (value) {
-                              case 'edit':
-                                await _editToken(token);
-                                break;
-                              case 'delete':
-                                await _deleteToken(token);
-                                break;
-                              case 'refresh':
-                                await _refreshToken(token);
-                                break;
-                              case 'copy':
-                                FlutterClipboard.copy(token.token).then((_) {
-                                  showAppNotification(
-                                      context, 'Token copied to clipboard');
-                                });
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'copy',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.copy, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Copy'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Edit'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'refresh',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.refresh, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Refresh'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Delete'),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  TokenDetailsPage(token: token),
-                              settings: RouteSettings(
-                                arguments: widget.onDialogOpenChanged,
-                              ),
-                            ),
-                          ).then((_) => _loadTokens(updateFromRemote: false));
-                        },
                       ),
                     );
                   },

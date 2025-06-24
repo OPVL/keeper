@@ -75,6 +75,8 @@ class ApiToken {
 
   String get expiryFormatted => DateFormat('yyyy-MM-dd HH:mm').format(expiresAt);
   
+  String get expiryDateOnly => DateFormat('MMM d, yyyy').format(expiresAt);
+  
   String get lastUsedFormatted => lastUsed != null 
       ? DateFormat('yyyy-MM-dd HH:mm').format(lastUsed!) 
       : 'Never';
