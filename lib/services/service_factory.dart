@@ -123,7 +123,16 @@ class ServiceFactory {
       
       switch (serviceType) {
         case ServiceType.gitlab:
-          return await (service as GitLabService).updateTokenFromRemote(token);
+          final updatedToken = await (service as GitLabService).updateTokenFromRemote(token);
+          if (updatedToken != null) {
+            // Preserve repositories and refresh history
+            return updatedToken.copyWith(
+              repositories: token.repositories,
+              refreshHistory: token.refreshHistory,
+              lastUsed: token.lastUsed,
+            );
+          }
+          return null;
         default:
           throw Exception('Service not supported');
       }
@@ -144,37 +153,60 @@ class ServiceFactory {
       
       final service = await getService(serviceType);
       
+      ApiToken? refreshedToken;
       switch (serviceType) {
         case ServiceType.gitlab:
-          final refreshedToken = await (service as GitLabService).refreshToken(token);
-          
-          if (refreshedToken != null) {
-            // Add refresh history
-            final refreshHistory = List<TokenRefresh>.from(token.refreshHistory);
-            refreshHistory.insert(0, TokenRefresh(
-              timestamp: DateTime.now(),
-              previousToken: token.token,
-            ));
-            
-            // Update repositories with new token
-            for (final repo in token.repositories) {
-              await GitService.updateGitConfig(
-                repo.path,
-                repo.username,
-                refreshedToken.token,
-              );
-            }
-            
-            // Return updated token with history
-            return refreshedToken.copyWith(
-              refreshHistory: refreshHistory,
-              lastUsed: DateTime.now(),
-            );
-          }
-          return null;
+          refreshedToken = await (service as GitLabService).refreshToken(token);
+          break;
         default:
           throw Exception('Service not supported for token refresh');
       }
+      
+      if (refreshedToken != null) {
+        // Add refresh history
+        final refreshHistory = List<TokenRefresh>.from(token.refreshHistory);
+        refreshHistory.insert(0, TokenRefresh(
+          timestamp: DateTime.now(),
+          previousToken: token.token,
+        ));
+        
+        // Preserve repositories from original token
+        final repositories = List<TokenRepository>.from(token.repositories);
+        
+        // Create updated token with repositories and history
+        final updatedToken = refreshedToken.copyWith(
+          repositories: repositories,
+          refreshHistory: refreshHistory,
+          lastUsed: DateTime.now(),
+        );
+        
+        // Update repositories with new token
+        debugPrint('Updating ${repositories.length} repositories with new token');
+        final settings = await _settingsService.getSettings();
+        
+        for (final repo in repositories) {
+          debugPrint('Updating repository: ${repo.path}');
+          try {
+            final success = await GitService.updateGitConfig(
+              repo.path,
+              repo.username.isNotEmpty ? repo.username : settings.username,
+              updatedToken.token,
+            );
+            
+            if (success) {
+              debugPrint('Repository updated successfully: ${repo.path}');
+            } else {
+              debugPrint('Failed to update repository: ${repo.path}');
+            }
+          } catch (e) {
+            debugPrint('Error updating repository: ${repo.path} - $e');
+          }
+        }
+        
+        return updatedToken;
+      }
+      
+      return null;
     } catch (e) {
       debugPrint('Error refreshing token: $e');
       return null;

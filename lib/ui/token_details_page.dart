@@ -6,6 +6,7 @@ import 'package:path/path.dart' as path;
 import '../models/token.dart';
 import '../models/settings.dart';
 import '../services/git_service.dart';
+import '../services/service_factory.dart';
 import '../services/settings_service.dart';
 import '../services/token_storage.dart';
 import '../utils/token_formatter.dart';
@@ -393,6 +394,83 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
     }
   }
 
+  Future<void> _refreshToken() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      // Get service type
+      final serviceType = ServiceType.values.firstWhere(
+        (e) => e.toString().split('.').last == _token.service,
+      );
+      
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Refreshing token...')),
+      );
+      
+      // Refresh token
+      final refreshedToken = await ServiceFactory.refreshToken(_token);
+      
+      if (refreshedToken != null) {
+        // Save the refreshed token
+        await _tokenStorage.saveToken(refreshedToken);
+        
+        setState(() {
+          _token = refreshedToken;
+          _isLoading = false;
+        });
+        
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Token refreshed successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Copy the new token to clipboard
+          FlutterClipboard.copy(refreshedToken.token).then((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('New token copied to clipboard')),
+            );
+          });
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to refresh token'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error refreshing token: $e');
+      
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error refreshing token: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _removeRepository(int index) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -434,6 +512,11 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
       appBar: AppBar(
         title: Text(_token.name),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Token',
+            onPressed: _refreshToken,
+          ),
           IconButton(
             icon: const Icon(Icons.copy),
             tooltip: 'Copy Token',
