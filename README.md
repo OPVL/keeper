@@ -1,30 +1,33 @@
 # 🔐 Keeper
 
-> Because remembering API tokens is so last season.
+> Because remembering API tokens is harder than explaining git rebasing to your cat.
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/lloydculpepper/keeper)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/OPVL/keeper)
 [![Flutter](https://img.shields.io/badge/flutter-3.6.0+-46D1FD.svg)](https://flutter.dev)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GitLab](https://img.shields.io/badge/GitLab-Supported-FC6D26.svg)](https://gitlab.com)
 
 ## 🚀 Overview
 
-**Keeper** is a minimalist, programmer-friendly macOS menu bar utility for managing API tokens. It securely stores your tokens, handles automatic refreshing, and seamlessly integrates with Git repositories.
+**Keeper** is a minimalist, programmer-friendly macOS menu bar utility for managing API tokens. It securely stores your tokens, handles automatic refreshing for GitLab, and seamlessly integrates with Git repositories.
 
 ```dart
-if (you.hate(managing_tokens)) {
+if (you.hate(managing_tokens) && you.love(your_sanity)) {
   keeper.solve(your_problems);
+  you.enjoyLife();
 }
 ```
 
 ## ✨ Features
 
 - **🔒 Secure Token Storage**: Keep your API tokens safe and organized
-- **🔄 Automatic Token Refreshing**: Never deal with expired tokens again
+- **🔄 Automatic Token Refreshing**: Never deal with expired GitLab tokens again
 - **🖥️ Menu Bar Integration**: Quick access without cluttering your workspace
 - **🌙 Multiple Theme Support**: Including classic terminal themes like Solarized, Monokai, Dracula, and Nord
 - **🔌 Git Repository Integration**: Automatically configure Git repositories with your tokens
 - **👤 Service-specific Usernames**: Maintain different identities for different services
 - **♿ Accessibility Features**: High contrast UI elements and semantic labels
+- **🔍 Import from Repositories**: Scan existing Git repositories for tokens
 
 ## 🛠️ Technical Details
 
@@ -46,9 +49,10 @@ Tokens are stored locally with the following properties:
 
 ### Supported Services
 
-- GitLab
-- GitHub
-- (More coming soon!)
+- **GitLab**: Full support including automatic token refreshing
+- Other services: Basic storage support (no automatic refreshing)
+
+<!-- Easter egg: Try clicking the coffee icon in the About section 10 times -->
 
 ### Theme Support
 
@@ -63,7 +67,7 @@ Keeper includes several classic terminal color schemes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lloydculpepper/keeper.git
+git clone https://github.com/OPVL/keeper.git
 
 # Navigate to the project directory
 cd keeper
@@ -81,9 +85,17 @@ flutter run
 
 1. Click the Keeper icon in your menu bar
 2. Click the "+" button
-3. Select the service type
+3. Select the service type (GitLab recommended)
 4. Enter your token details
 5. Click "Save"
+
+### Importing from a Repository
+
+1. Click the Keeper icon in your menu bar
+2. Click "Import from Repo" button
+3. Select your Git repository folder
+4. Confirm the extracted credentials
+5. Keeper will automatically store the token and configure the repository
 
 ### Linking a Git Repository
 
@@ -125,6 +137,7 @@ lib/
 │   └── token.dart        # Token and repository models
 ├── services/             # Business logic
 │   ├── git_service.dart  # Git repository integration
+│   ├── gitlab_service.dart # GitLab API integration
 │   ├── service_factory.dart  # Service implementations
 │   ├── settings_service.dart # Settings management
 │   ├── theme_service.dart    # Theme management
@@ -132,6 +145,8 @@ lib/
 ├── ui/                   # User interface
 │   ├── app_window.dart   # Main application window
 │   ├── common/           # Shared UI components
+│   │   ├── accessibility_utils.dart # Accessibility helpers
+│   │   └── ui_components.dart # Reusable UI components
 │   ├── settings_page.dart # Settings screen
 │   └── token_details_page.dart # Token details screen
 └── utils/               # Utility functions
@@ -148,7 +163,7 @@ if (you.have(new_feature) || you.found(bug)) {
   fork();
   fix();
   pull_request();
-  // No promises, but we'll try to merge it faster than a token expires!
+  // We'll merge it faster than a token expires!
 }
 ```
 
