@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:clipboard/clipboard.dart';
 import '../models/token.dart';
 import '../services/service_factory.dart';
 import '../services/token_storage.dart';
+import '../services/theme_service.dart' as app_theme;
 import '../utils/token_formatter.dart';
+import 'common/ui_components.dart';
 import 'token_dialog.dart';
 import 'token_details_page.dart';
 import 'settings_page.dart';
 
 class AppWindow extends StatefulWidget {
   final Function(bool)? onDialogOpenChanged;
+  final Function(app_theme.ThemeMode)? onThemeChanged;
+  final Function(app_theme.ColorPalette)? onPaletteChanged;
+  final app_theme.ThemeMode currentThemeMode;
+  final app_theme.ColorPalette currentPalette;
 
   const AppWindow({
     super.key,
     this.onDialogOpenChanged,
+    this.onThemeChanged,
+    this.onPaletteChanged,
+    this.currentThemeMode = app_theme.ThemeMode.system,
+    this.currentPalette = app_theme.ColorPalette.default_,
   });
 
   @override
@@ -127,9 +136,7 @@ class _AppWindowState extends State<AppWindow> {
   Future<void> _refreshToken(ApiToken token) async {
     try {
       // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Refreshing token...')),
-      );
+      showAppNotification(context, 'Refreshing token...');
 
       final refreshedToken = await ServiceFactory.refreshToken(token);
 
@@ -137,179 +144,180 @@ class _AppWindowState extends State<AppWindow> {
         await _tokenStorage.saveToken(refreshedToken);
         await _loadTokens(updateFromRemote: false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Token refreshed successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showAppNotification(context, 'Token refreshed successfully');
 
         // Copy the new token to clipboard
         FlutterClipboard.copy(refreshedToken.token);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to refresh token'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showAppNotification(context, 'Failed to refresh token', isError: true);
       }
     } catch (e) {
       debugPrint('Error refreshing token: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error refreshing token: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showAppNotification(context, 'Error refreshing token: $e', isError: true);
     }
-  }
-
-  void _showNotification(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(48.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      appBar: AppHeader(
+        title: 'API Token Keeper',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh Tokens',
+            onPressed: () => _loadTokens(updateFromRemote: true),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'API Token Keeper',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            tooltip: 'Settings',
+            onPressed: () {
+              // Notify that dialog is open
+              widget.onDialogOpenChanged?.call(true);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(
+                    currentThemeMode: widget.currentThemeMode,
+                    currentPalette: widget.currentPalette,
+                    onThemeChanged: widget.onThemeChanged,
+                    onPaletteChanged: widget.onPaletteChanged,
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white),
-                      tooltip: 'Refresh Tokens',
-                      onPressed: () => _loadTokens(updateFromRemote: true),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.settings, color: Colors.white),
-                      tooltip: 'Settings',
-                      onPressed: () {
-                        // Notify that dialog is open
-                        widget.onDialogOpenChanged?.call(true);
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SettingsPage()),
-                        ).then((_) {
-                          // Notify that dialog is closed
-                          widget.onDialogOpenChanged?.call(false);
-                          _loadTokens(); // Reload tokens when returning from settings
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      tooltip: 'Hide Window',
-                      onPressed: () => windowManager.hide(),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ).then((_) {
+                // Notify that dialog is closed
+                widget.onDialogOpenChanged?.call(false);
+                _loadTokens(); // Reload tokens when returning from settings
+              });
+            },
           ),
-        ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _tokens.isEmpty
-              ? const Center(child: Text('No tokens added yet'))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('No tokens added yet'),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _addToken,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Token'),
+                      ),
+                    ],
+                  ),
+                )
               : ListView.builder(
                   itemCount: _tokens.length,
                   itemBuilder: (context, index) {
                     final token = _tokens[index];
-                    return ListTile(
-                      title: Row(
-                        children: [
-                          Expanded(child: Text(token.name)),
-                          Text(
-                            TokenFormatter.obscureToken(token.token),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color:
-                                  Theme.of(context).textTheme.bodySmall?.color,
-                              fontFamily: 'monospace',
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      child: ListTile(
+                        title: Row(
+                          children: [
+                            Expanded(child: Text(token.name)),
+                            Text(
+                              TokenFormatter.obscureToken(token.token),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.color,
+                                fontFamily: 'monospace',
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Text(
-                          '${token.service} - ${token.isValid ? 'Valid until ${token.expiryFormatted}' : 'Expired'}'),
-                      leading: Icon(
-                        token.isValid ? Icons.check_circle : Icons.error,
-                        color: token.isValid ? Colors.green : Colors.red,
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) async {
-                          switch (value) {
-                            case 'edit':
-                              await _editToken(token);
-                              break;
-                            case 'delete':
-                              await _deleteToken(token);
-                              break;
-                            case 'refresh':
-                              await _refreshToken(token);
-                              break;
-                          }
+                          ],
+                        ),
+                        subtitle: Text(
+                          '${token.service} - ${token.isValid ? 'Valid until ${token.expiryFormatted}' : 'Expired'}',
+                        ),
+                        leading: Icon(
+                          token.isValid ? Icons.check_circle : Icons.error,
+                          color: token.isValid ? Colors.green : Colors.red,
+                        ),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) async {
+                            switch (value) {
+                              case 'edit':
+                                await _editToken(token);
+                                break;
+                              case 'delete':
+                                await _deleteToken(token);
+                                break;
+                              case 'refresh':
+                                await _refreshToken(token);
+                                break;
+                              case 'copy':
+                                FlutterClipboard.copy(token.token).then((_) {
+                                  showAppNotification(
+                                      context, 'Token copied to clipboard');
+                                });
+                                break;
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'copy',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.copy, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Copy'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'refresh',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.refresh, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Refresh'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Delete'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TokenDetailsPage(token: token),
+                              settings: RouteSettings(
+                                arguments: widget.onDialogOpenChanged,
+                              ),
+                            ),
+                          ).then((_) => _loadTokens(updateFromRemote: false));
                         },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Text('Edit'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'refresh',
-                            child: Text('Refresh Token'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Text('Delete'),
-                          ),
-                        ],
                       ),
-                      onLongPress: () =>
-                          FlutterClipboard.copy(token.token).then((_) {
-                        _showNotification('Token copied to clipboard');
-                      }),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TokenDetailsPage(token: token),
-                            settings: RouteSettings(
-                              arguments: widget.onDialogOpenChanged,
-                            ),
-                          ),
-                        ).then((_) => _loadTokens(updateFromRemote: false));
-                      },
                     );
                   },
                 ),

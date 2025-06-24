@@ -3,24 +3,28 @@ class ServiceSettings {
   final String name;
   final String baseUrl;
   final bool enabled;
+  final String username;
 
   ServiceSettings({
     required this.id,
     required this.name,
     required this.baseUrl,
     this.enabled = true,
+    this.username = '',
   });
 
   ServiceSettings copyWith({
     String? name,
     String? baseUrl,
     bool? enabled,
+    String? username,
   }) {
     return ServiceSettings(
       id: id,
       name: name ?? this.name,
       baseUrl: baseUrl ?? this.baseUrl,
       enabled: enabled ?? this.enabled,
+      username: username ?? this.username,
     );
   }
 
@@ -30,6 +34,7 @@ class ServiceSettings {
       'name': name,
       'baseUrl': baseUrl,
       'enabled': enabled,
+      'username': username,
     };
   }
 
@@ -39,33 +44,29 @@ class ServiceSettings {
       name: json['name'],
       baseUrl: json['baseUrl'],
       enabled: json['enabled'] ?? true,
+      username: json['username'] ?? '',
     );
   }
 }
 
 class AppSettings {
   final List<ServiceSettings> services;
-  final String username;
 
   AppSettings({
     required this.services,
-    this.username = '',
   });
 
   AppSettings copyWith({
     List<ServiceSettings>? services,
-    String? username,
   }) {
     return AppSettings(
       services: services ?? this.services,
-      username: username ?? this.username,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'services': services.map((s) => s.toJson()).toList(),
-      'username': username,
     };
   }
 
@@ -75,7 +76,6 @@ class AppSettings {
               ?.map((s) => ServiceSettings.fromJson(s))
               .toList() ??
           [],
-      username: json['username'] ?? '',
     );
   }
 
@@ -87,8 +87,12 @@ class AppSettings {
           name: 'GitLab',
           baseUrl: 'https://gitlab.com',
         ),
+        ServiceSettings(
+          id: 'github',
+          name: 'GitHub',
+          baseUrl: 'https://github.com',
+        ),
       ],
-      username: '',
     );
   }
 }

@@ -74,15 +74,6 @@ class _TokenDialogState extends State<TokenDialog> {
     super.dispose();
   }
 
-  // Format token to show only first 8 characters
-  String _formatToken(String token) {
-    if (token.isEmpty) return '';
-    if (!_obscureToken) return token;
-
-    if (token.length <= 8) return token;
-    return '${token.substring(0, 8)}${List.filled(token.length - 8, '•').join()}';
-  }
-
   Future<void> _validateToken() async {
     if (_tokenController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
