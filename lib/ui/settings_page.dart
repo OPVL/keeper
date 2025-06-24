@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/settings.dart';
 import '../services/settings_service.dart';
 import '../services/service_factory.dart';
 import '../services/theme_service.dart' as app_theme;
+import '../services/token_storage.dart';
 import 'common/ui_components.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -30,6 +35,10 @@ class _SettingsPageState extends State<SettingsPage> {
   final Map<String, TextEditingController> _controllers = {};
   app_theme.ThemeMode _selectedThemeMode = app_theme.ThemeMode.system;
   app_theme.ColorPalette _selectedPalette = app_theme.ColorPalette.default_;
+  late final String _appVersion;
+  late final String _buildNumber;
+  late final String _platformInfo;
+  late final String _dartVersion;
 
   @override
   void initState() {
@@ -37,6 +46,24 @@ class _SettingsPageState extends State<SettingsPage> {
     _selectedThemeMode = widget.currentThemeMode;
     _selectedPalette = widget.currentPalette;
     _loadSettings();
+    _loadAppInfo();
+  }
+
+  Future<void> _loadAppInfo() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final platform = Platform.operatingSystem;
+      final version = Platform.version;
+
+      setState(() {
+        _appVersion = packageInfo.version;
+        _dartVersion = version;
+        _buildNumber = packageInfo.buildNumber;
+        _platformInfo = '$platform (${Platform.operatingSystemVersion})';
+      });
+    } catch (e) {
+      debugPrint('Error loading app info: $e');
+    }
   }
 
   @override
@@ -56,8 +83,18 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       _settings = await _settingsService.getSettings();
 
-      // Set username controller
-      // _usernameController.text = _settings.username;
+      // Remove duplicate services
+      final uniqueServices = <String>{};
+      _settings = _settings.copyWith(
+        services: _settings.services.where((service) {
+          final isUnique = !uniqueServices.contains(service.id);
+          uniqueServices.add(service.id);
+          return isUnique;
+        }).toList(),
+      );
+
+      // Save the deduplicated settings
+      await _settingsService.saveSettings(_settings);
 
       // Create controllers for each service
       for (final service in _settings.services) {
@@ -117,6 +154,88 @@ class _SettingsPageState extends State<SettingsPage> {
         return const Color(0xFF50FA7B);
       case app_theme.ColorPalette.nord:
         return const Color(0xFF88C0D0);
+    }
+  }
+
+  void _launchUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+    }
+  }
+  
+  Future<void> _showClearDataDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Data'),
+        content: const Text(
+          'This will delete all tokens, settings, and preferences. '
+          'This action cannot be undone.\n\n'
+          'Are you sure you want to continue?'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Clear All Data'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      await _clearAllData();
+    }
+  }
+  
+  Future<void> _clearAllData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      // Clear shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      // Reset settings to defaults
+      _settings = AppSettings.defaults();
+      await _settingsService.saveSettings(_settings);
+      
+      // Clear token storage
+      final tokenStorage = TokenStorage();
+      await tokenStorage.clearAllTokens();
+      
+      // Reset theme
+      if (widget.onThemeChanged != null) {
+        widget.onThemeChanged!(app_theme.ThemeMode.system);
+      }
+      
+      // Reset palette
+      if (widget.onPaletteChanged != null) {
+        widget.onPaletteChanged!(app_theme.ColorPalette.default_);
+      }
+      
+      // Reload settings
+      await _loadSettings();
+      
+      showAppNotification(context, 'All data has been cleared');
+    } catch (e) {
+      debugPrint('Error clearing data: $e');
+      showAppNotification(context, 'Error clearing data: $e', isError: true);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -250,12 +369,61 @@ class _SettingsPageState extends State<SettingsPage> {
                       .toList(),
                 ),
 
-                // Services section
+                // Author section
                 SectionCard(
-                  title: 'Services',
-                  children: _settings.services
-                      .map((service) => _buildServiceTile(service))
-                      .toList(),
+                  title: 'About',
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.person),
+                      title: const Text('Author'),
+                      subtitle: const Text('Lloyd Culpepper'),
+                      onTap: () =>
+                          _launchUrl('https://github.com/lloydculpepper'),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.code),
+                      title: const Text('Source Code'),
+                      subtitle: const Text('GitHub Repository'),
+                      onTap: () => _launchUrl(
+                          'https://github.com/lloydculpepper/keeper'),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.coffee),
+                      title: const Text('Support Development'),
+                      subtitle: const Text('Buy me a coffee on Ko-fi'),
+                      onTap: () =>
+                          _launchUrl('https://ko-fi.com/opvlmakesthings'),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('Version'),
+                      subtitle: Text('v$_appVersion ($_buildNumber)'),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.devices),
+                      title: const Text('Platform'),
+                      subtitle: Text(_platformInfo),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.code),
+                      title: const Text('Dart Version'),
+                      subtitle: Text(_dartVersion),
+                    ),
+                  ],
+                ),
+                
+                // Debug section
+                SectionCard(
+                  title: 'Debug',
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.delete_forever, color: Colors.red),
+                      title: const Text('Clear All Data'),
+                      subtitle: const Text('Delete all tokens and settings (cannot be undone)'),
+                      onTap: _showClearDataDialog,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -305,7 +473,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   hintText: 'e.g., https://gitlab.example.com',
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 8),
               TextFormField(
                 controller: usernameController,
                 decoration: InputDecoration(

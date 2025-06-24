@@ -89,4 +89,14 @@ class TokenStorage {
       debugPrint('Error updating tokens from remote: $e');
     }
   }
+  
+  Future<void> clearAllTokens() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_tokensKey);
+      debugPrint('All tokens cleared');
+    } catch (e) {
+      debugPrint('Error clearing tokens: $e');
+    }
+  }
 }
