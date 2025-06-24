@@ -3,19 +3,21 @@ import 'package:intl/intl.dart';
 class TokenRepository {
   final String path;
   final String username;
-  
+
   TokenRepository({
     required this.path,
     required this.username,
   });
-  
+
+  String get name => path.split('/').last;
+
   Map<String, dynamic> toJson() {
     return {
       'path': path,
       'username': username,
     };
   }
-  
+
   factory TokenRepository.fromJson(Map<String, dynamic> json) {
     return TokenRepository(
       path: json['path'],
@@ -27,27 +29,28 @@ class TokenRepository {
 class TokenRefresh {
   final DateTime timestamp;
   final String previousToken;
-  
+
   TokenRefresh({
     required this.timestamp,
     required this.previousToken,
   });
-  
+
   Map<String, dynamic> toJson() {
     return {
       'timestamp': timestamp.toIso8601String(),
       'previousToken': previousToken,
     };
   }
-  
+
   factory TokenRefresh.fromJson(Map<String, dynamic> json) {
     return TokenRefresh(
       timestamp: DateTime.parse(json['timestamp']),
       previousToken: json['previousToken'],
     );
   }
-  
-  String get formattedTimestamp => DateFormat('yyyy-MM-dd HH:mm').format(timestamp);
+
+  String get formattedTimestamp =>
+      DateFormat('yyyy-MM-dd HH:mm').format(timestamp);
 }
 
 class ApiToken {
@@ -73,13 +76,20 @@ class ApiToken {
 
   bool get isValid => expiresAt.isAfter(DateTime.now());
 
-  String get expiryFormatted => DateFormat('yyyy-MM-dd HH:mm').format(expiresAt);
-  
+  String get expiryFormatted =>
+      DateFormat('d MMM, yyyy HH:mm').format(expiresAt);
+
   String get expiryDateOnly => DateFormat('MMM d, yyyy').format(expiresAt);
-  
-  String get lastUsedFormatted => lastUsed != null 
-      ? DateFormat('yyyy-MM-dd HH:mm').format(lastUsed!) 
+
+  String get lastUsedFormatted => lastUsed != null
+      ? DateFormat('d MMM, yyyy HH:mm').format(lastUsed!)
       : 'Never';
+
+  String get lastUsedDateOnly =>
+      lastUsed != null ? DateFormat('MMM d, yyyy').format(lastUsed!) : 'Never';
+
+  List<TokenRepository> get repositoriesSorted =>
+      repositories..sort((a, b) => a.path.compareTo(b.path));
 
   Map<String, dynamic> toJson() {
     return {
@@ -89,7 +99,8 @@ class ApiToken {
       'expiresAt': expiresAt.toIso8601String(),
       'service': service,
       'repositories': repositories.map((repo) => repo.toJson()).toList(),
-      'refreshHistory': refreshHistory.map((refresh) => refresh.toJson()).toList(),
+      'refreshHistory':
+          refreshHistory.map((refresh) => refresh.toJson()).toList(),
       'lastUsed': lastUsed?.toIso8601String(),
     };
   }
@@ -109,10 +120,11 @@ class ApiToken {
           ? List<TokenRefresh>.from(
               json['refreshHistory'].map((x) => TokenRefresh.fromJson(x)))
           : [],
-      lastUsed: json['lastUsed'] != null ? DateTime.parse(json['lastUsed']) : null,
+      lastUsed:
+          json['lastUsed'] != null ? DateTime.parse(json['lastUsed']) : null,
     );
   }
-  
+
   ApiToken copyWith({
     String? id,
     String? name,
@@ -134,7 +146,7 @@ class ApiToken {
       lastUsed: lastUsed ?? this.lastUsed,
     );
   }
-  
+
   @override
   String toString() {
     return 'ApiToken(id: $id, name: $name, token: ${token.substring(0, 5)}..., expiresAt: $expiryFormatted, service: $service)';

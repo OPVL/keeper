@@ -87,11 +87,6 @@ class AppSettings {
           name: 'GitLab',
           baseUrl: 'https://gitlab.com',
         ),
-        ServiceSettings(
-          id: 'github',
-          name: 'GitHub',
-          baseUrl: 'https://github.com',
-        ),
       ],
     );
   }

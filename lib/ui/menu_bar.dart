@@ -104,6 +104,15 @@ class MenuBarManager {
       menuItems.add(MenuItem.separator());
 
       menuItems.add(MenuItem(
+        label: 'Show Keeper',
+        onClick: (menuItem) {
+          debugPrint('Showing Keeper window');
+          windowManager.show();
+          windowManager.focus();
+        },
+      ));
+
+      menuItems.add(MenuItem(
         label: 'Quit',
         onClick: (_) {
           windowManager.destroy();

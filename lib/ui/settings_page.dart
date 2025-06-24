@@ -144,9 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
     switch (palette) {
       case app_theme.ColorPalette.default_:
         return const Color(0xFF2979FF);
-      case app_theme.ColorPalette.solarizedDark:
-        return const Color(0xFF268BD2);
-      case app_theme.ColorPalette.solarizedLight:
+      case app_theme.ColorPalette.solarized:
         return const Color(0xFF268BD2);
       case app_theme.ColorPalette.monokai:
         return const Color(0xFFA6E22E);
@@ -167,17 +165,16 @@ class _SettingsPageState extends State<SettingsPage> {
       debugPrint('Error launching URL: $e');
     }
   }
-  
+
   Future<void> _showClearDataDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Data'),
         content: const Text(
-          'This will delete all tokens, settings, and preferences. '
-          'This action cannot be undone.\n\n'
-          'Are you sure you want to continue?'
-        ),
+            'This will delete all tokens, settings, and preferences. '
+            'This action cannot be undone.\n\n'
+            'Are you sure you want to continue?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -191,43 +188,44 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       await _clearAllData();
     }
   }
-  
+
   Future<void> _clearAllData() async {
     try {
       setState(() {
         _isLoading = true;
       });
-      
+
       // Clear shared preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       // Reset settings to defaults
       _settings = AppSettings.defaults();
       await _settingsService.saveSettings(_settings);
-      
+
       // Clear token storage
       final tokenStorage = TokenStorage();
       await tokenStorage.clearAllTokens();
-      
+
       // Reset theme
       if (widget.onThemeChanged != null) {
         widget.onThemeChanged!(app_theme.ThemeMode.system);
       }
-      
+
       // Reset palette
       if (widget.onPaletteChanged != null) {
         widget.onPaletteChanged!(app_theme.ColorPalette.default_);
       }
-      
+
       // Reload settings
       await _loadSettings();
-      
+
+      Navigator.of(context).pop();
       showAppNotification(context, 'All data has been cleared');
     } catch (e) {
       debugPrint('Error clearing data: $e');
@@ -257,6 +255,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: 'Theme',
                   children: [
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: const Text('Light'),
                       leading: const Icon(Icons.light_mode),
                       trailing: Radio<app_theme.ThemeMode>(
@@ -271,6 +270,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       onTap: () => _changeTheme(app_theme.ThemeMode.light),
                     ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: const Text('Dark'),
                       leading: const Icon(Icons.dark_mode),
                       trailing: Radio<app_theme.ThemeMode>(
@@ -285,6 +285,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       onTap: () => _changeTheme(app_theme.ThemeMode.dark),
                     ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: const Text('System'),
                       leading: const Icon(Icons.brightness_auto),
                       trailing: Radio<app_theme.ThemeMode>(
@@ -374,6 +375,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: 'About',
                   children: [
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.person),
                       title: const Text('Author'),
                       subtitle: const Text('Lloyd Culpepper'),
@@ -381,6 +383,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           _launchUrl('https://github.com/lloydculpepper'),
                     ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.code),
                       title: const Text('Source Code'),
                       subtitle: const Text('GitHub Repository'),
@@ -388,39 +391,48 @@ class _SettingsPageState extends State<SettingsPage> {
                           'https://github.com/lloydculpepper/keeper'),
                     ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.coffee),
                       title: const Text('Support Development'),
                       subtitle: const Text('Buy me a coffee on Ko-fi'),
                       onTap: () =>
                           _launchUrl('https://ko-fi.com/opvlmakesthings'),
                     ),
-                    const Divider(),
+                    Divider(
+                      color: Theme.of(context).dividerColor,
+                    ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.info_outline),
                       title: const Text('Version'),
                       subtitle: Text('v$_appVersion ($_buildNumber)'),
                     ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.devices),
                       title: const Text('Platform'),
                       subtitle: Text(_platformInfo),
                     ),
                     ListTile(
+                      contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.code),
                       title: const Text('Dart Version'),
                       subtitle: Text(_dartVersion),
                     ),
                   ],
                 ),
-                
+
                 // Debug section
                 SectionCard(
                   title: 'Debug',
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.delete_forever, color: Colors.red),
+                      contentPadding: EdgeInsets.zero,
+                      leading:
+                          const Icon(Icons.delete_forever, color: Colors.red),
                       title: const Text('Clear All Data'),
-                      subtitle: const Text('Delete all tokens and settings (cannot be undone)'),
+                      subtitle: const Text(
+                          'Delete all tokens and settings (cannot be undone)'),
                       onTap: _showClearDataDialog,
                     ),
                   ],
@@ -438,6 +450,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final usernameController = TextEditingController(text: service.username);
 
     return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
       title: Text(service.name),
       subtitle: service.username.isNotEmpty
           ? Text('Username: ${service.username}',
@@ -462,7 +475,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -473,7 +486,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   hintText: 'e.g., https://gitlab.example.com',
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               TextFormField(
                 controller: usernameController,
                 decoration: InputDecoration(

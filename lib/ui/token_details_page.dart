@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:clipboard/clipboard.dart';
+import 'package:keeper/ui/common/accessibility_utils.dart';
 import 'package:path/path.dart' as path;
 import '../models/token.dart';
 import '../models/settings.dart';
@@ -219,22 +220,26 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
     // Notify that dialog is open
     onDialogOpenChanged?.call(true);
 
+    // Get service name with proper capitalization
+    final serviceName = _token.service.substring(0, 1).toUpperCase() +
+        _token.service.substring(1).toLowerCase();
+
     final controller = TextEditingController(text: _username);
 
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Set Username'),
+        title: Text('Set $serviceName Username'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Please set your username for Git repositories:'),
+            Text('Please enter your $serviceName username:'),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                hintText: 'Enter your username',
+              decoration: InputDecoration(
+                labelText: '$serviceName Username',
+                hintText: 'Enter your $serviceName username',
               ),
             ),
           ],
@@ -453,11 +458,15 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(fontSize: 16)),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Remove'),
+            child: const Text('Remove',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -482,24 +491,37 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final background = Theme.of(context).primaryColor;
     return Scaffold(
       appBar: AppHeader(
         title: _token.name,
         showBackButton: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            tooltip: 'Refresh Token',
-            onPressed: _refreshToken,
+          Semantics(
+            label: 'Refresh Token',
+            child: IconButton(
+              icon: Icon(
+                Icons.refresh,
+                color: background.contrastingTextColor,
+              ),
+              onPressed: _refreshToken,
+              tooltip: 'Refresh Token',
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.copy, color: Colors.white),
-            tooltip: 'Copy Token',
-            onPressed: () {
-              FlutterClipboard.copy(_token.token).then((_) {
-                showAppNotification(context, 'Token copied to clipboard');
-              });
-            },
+          Semantics(
+            label: 'Copy Token to Clipboard',
+            child: IconButton(
+              icon: Icon(
+                Icons.copy,
+                color: background.contrastingTextColor,
+              ),
+              tooltip: 'Copy Token',
+              onPressed: () {
+                FlutterClipboard.copy(_token.token).then((_) {
+                  showAppNotification(context, 'Token copied to clipboard');
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -515,13 +537,17 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
                     title: 'Token Details',
                     children: [
                       DetailRow(label: 'Service', value: _token.service),
-                      DetailRow(
-                          label: 'Expires', value: _token.expiryFormatted),
+                      DetailRow(label: 'Expires', value: _token.expiryDateOnly),
                       DetailRow(
                           label: 'Last Used', value: _token.lastUsedFormatted),
                       DetailRow(
-                          label: 'Token',
-                          value: TokenFormatter.obscureToken(_token.token)),
+                        label: 'Token',
+                        value: TokenFormatter.obscureToken(_token.token),
+                      ),
+                      DetailRow(
+                        label: 'Username',
+                        value: _username.isEmpty ? 'Not set' : _username,
+                      ),
                     ],
                   ),
 
@@ -530,10 +556,19 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
                     title: 'Repositories',
                     actions: [
                       ElevatedButton.icon(
-                        icon: const Icon(
+                        style: Theme.of(context).elevatedButtonTheme.style,
+                        icon: Icon(
                           Icons.add,
+                          semanticLabel: 'Add Repository',
+                          color: background.contrastingTextColor,
                         ),
-                        label: const Text('Add'),
+                        label: Text(
+                          'Add',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: background.contrastingTextColor,
+                          ),
+                        ),
                         onPressed: _addRepository,
                       ),
                     ],
@@ -545,18 +580,25 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _token.repositories.length,
-                          separatorBuilder: (context, index) => const Divider(),
+                          separatorBuilder: (context, index) => Divider(
+                            color: Theme.of(context).dividerColor,
+                          ),
                           itemBuilder: (context, index) {
-                            final repo = _token.repositories[index];
+                            final repo = _token.repositoriesSorted[index];
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               title: Text(
-                                repo.path,
+                                repo.name,
                                 style: const TextStyle(fontSize: 14),
                               ),
-                              subtitle: Text('Username: ${repo.username}'),
+                              subtitle: Text(
+                                'path: ${repo.path}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                               trailing: IconButton(
-                                icon: const Icon(Icons.delete),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                tooltip: 'Remove Repository',
                                 onPressed: () => _removeRepository(index),
                               ),
                             );
@@ -576,7 +618,9 @@ class _TokenDetailsPageState extends State<TokenDetailsPage> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _token.refreshHistory.length,
-                          separatorBuilder: (context, index) => const Divider(),
+                          separatorBuilder: (context, index) => Divider(
+                            color: Theme.of(context).dividerColor,
+                          ),
                           itemBuilder: (context, index) {
                             final refresh = _token.refreshHistory[index];
                             return ListTile(

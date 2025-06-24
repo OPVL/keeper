@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+import 'accessibility_utils.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -22,10 +23,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = Theme.of(context).primaryColor;
+    // Ensure text has sufficient contrast against the background
+    final Color textColor = backgroundColor.contrastingTextColor;
+
     return Container(
       height: preferredSize.height,
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
+        color: backgroundColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -43,17 +48,20 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 if (showBackButton)
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: Icon(Icons.arrow_back, color: textColor, size: 24),
+                    tooltip: 'Back',
                     onPressed:
                         onBackPressed ?? () => Navigator.of(context).pop(),
+                    // semanticLabel: 'Go back',
                   ),
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
+                  semanticsLabel: title,
                 ),
               ],
             ),
@@ -61,9 +69,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 ...actions,
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
+                  icon: Icon(Icons.close, color: textColor, size: 24),
                   tooltip: 'Hide Window',
                   onPressed: () => windowManager.hide(),
+                  // semanticLabel: 'Hide window',
                 ),
               ],
             ),
@@ -86,6 +95,8 @@ class DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -95,13 +106,18 @@ class DetailRow extends StatelessWidget {
             width: 100,
             child: Text(
               '$label:',
-              style: const TextStyle(
+              style: textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
+              semanticsLabel: label,
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: textTheme.bodyMedium,
+              semanticsLabel: '$label: $value',
+            ),
           ),
         ],
       ),
@@ -123,6 +139,8 @@ class SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -135,10 +153,11 @@ class SectionCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
+                  semanticsLabel: title,
                 ),
                 ...actions,
               ],
@@ -156,8 +175,15 @@ void showAppNotification(BuildContext context, String message,
     {bool isError = false}) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message),
+      content: Text(
+        message,
+        style: TextStyle(
+          color: isError ? Colors.white : null,
+          fontWeight: isError ? FontWeight.bold : null,
+        ),
+      ),
       backgroundColor: isError ? Colors.red : null,
+      behavior: SnackBarBehavior.floating,
     ),
   );
 }

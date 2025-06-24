@@ -10,6 +10,7 @@ import 'git_service.dart';
 
 enum ServiceType {
   gitlab,
+  github,
   // Add more services here in the future
 }
 

@@ -9,8 +9,7 @@ enum ThemeMode {
 
 enum ColorPalette {
   default_,
-  solarizedDark,
-  solarizedLight,
+  solarized,
   monokai,
   dracula,
   nord,
@@ -21,10 +20,8 @@ extension ColorPaletteExtension on ColorPalette {
     switch (this) {
       case ColorPalette.default_:
         return 'Default';
-      case ColorPalette.solarizedDark:
-        return 'Solarized Dark';
-      case ColorPalette.solarizedLight:
-        return 'Solarized Light';
+      case ColorPalette.solarized:
+        return 'Solarized';
       case ColorPalette.monokai:
         return 'Monokai';
       case ColorPalette.dracula:
@@ -38,51 +35,52 @@ extension ColorPaletteExtension on ColorPalette {
 class ThemeService {
   static const String _themeKey = 'app_theme';
   static const String _paletteKey = 'color_palette';
-  
+
   // Get current theme mode
   Future<ThemeMode> getThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
     final themeString = prefs.getString(_themeKey);
-    
+
     if (themeString == null) {
       return ThemeMode.system;
     }
-    
+
     return ThemeMode.values.firstWhere(
       (e) => e.toString() == themeString,
       orElse: () => ThemeMode.system,
     );
   }
-  
+
   // Save theme mode
   Future<void> setThemeMode(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_themeKey, mode.toString());
   }
-  
+
   // Get current color palette
   Future<ColorPalette> getColorPalette() async {
     final prefs = await SharedPreferences.getInstance();
     final paletteString = prefs.getString(_paletteKey);
-    
+
     if (paletteString == null) {
       return ColorPalette.default_;
     }
-    
+
     return ColorPalette.values.firstWhere(
       (e) => e.toString() == paletteString,
       orElse: () => ColorPalette.default_,
     );
   }
-  
+
   // Save color palette
   Future<void> setColorPalette(ColorPalette palette) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_paletteKey, palette.toString());
   }
-  
+
   // Get theme data based on mode and palette
-  ThemeData getThemeData(ThemeMode mode, ColorPalette palette, bool isDarkMode) {
+  ThemeData getThemeData(
+      ThemeMode mode, ColorPalette palette, bool isDarkMode) {
     if (mode == ThemeMode.system) {
       // Use system preference
       if (isDarkMode) {
@@ -96,29 +94,27 @@ class ThemeService {
       return _getLightTheme(palette);
     }
   }
-  
+
   ThemeData _getLightTheme(ColorPalette palette) {
     switch (palette) {
       case ColorPalette.default_:
         return AppTheme.lightTheme;
-      case ColorPalette.solarizedLight:
-        return AppTheme.solarizedLightTheme;
       case ColorPalette.monokai:
         return AppTheme.monokaiLightTheme;
       case ColorPalette.dracula:
         return AppTheme.draculaLightTheme;
       case ColorPalette.nord:
         return AppTheme.nordLightTheme;
-      case ColorPalette.solarizedDark:
+      case ColorPalette.solarized:
         return AppTheme.solarizedLightTheme; // Fallback to light version
     }
   }
-  
+
   ThemeData _getDarkTheme(ColorPalette palette) {
     switch (palette) {
       case ColorPalette.default_:
         return AppTheme.darkTheme;
-      case ColorPalette.solarizedDark:
+      case ColorPalette.solarized:
         return AppTheme.solarizedDarkTheme;
       case ColorPalette.monokai:
         return AppTheme.monokaiDarkTheme;
@@ -126,8 +122,6 @@ class ThemeService {
         return AppTheme.draculaDarkTheme;
       case ColorPalette.nord:
         return AppTheme.nordDarkTheme;
-      case ColorPalette.solarizedLight:
-        return AppTheme.solarizedDarkTheme; // Fallback to dark version
     }
   }
 }
@@ -138,16 +132,16 @@ class AppTheme {
   static final _cardShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(8),
   );
-  
+
   static final _buttonShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(4),
   );
-  
+
   static final _inputBorder = OutlineInputBorder(
     borderRadius: BorderRadius.circular(4),
     borderSide: BorderSide.none,
   );
-  
+
   // Default Light Theme
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
@@ -202,7 +196,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Default Dark Theme
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -258,7 +252,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Solarized Dark Theme
   static ThemeData solarizedDarkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -296,7 +290,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF268BD2), width: 1), // Blue
+        borderSide:
+            const BorderSide(color: Color(0xFF268BD2), width: 1), // Blue
       ),
       filled: true,
       fillColor: const Color(0xFF073642), // Base02
@@ -317,7 +312,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Solarized Light Theme
   static ThemeData solarizedLightTheme = ThemeData(
     brightness: Brightness.light,
@@ -355,7 +350,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF268BD2), width: 1), // Blue
+        borderSide:
+            const BorderSide(color: Color(0xFF268BD2), width: 1), // Blue
       ),
       filled: true,
       fillColor: const Color(0xFFEEE8D5), // Base2
@@ -376,7 +372,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Monokai Dark Theme
   static ThemeData monokaiDarkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -414,7 +410,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFFA6E22E), width: 1), // Green
+        borderSide:
+            const BorderSide(color: Color(0xFFA6E22E), width: 1), // Green
       ),
       filled: true,
       fillColor: const Color(0xFF3E3D32), // Lighter Background
@@ -435,7 +432,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Monokai Light Theme (adaptation)
   static ThemeData monokaiLightTheme = ThemeData(
     brightness: Brightness.light,
@@ -473,7 +470,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF4D9A06), width: 1), // Green
+        borderSide:
+            const BorderSide(color: Color(0xFF4D9A06), width: 1), // Green
       ),
       filled: true,
       fillColor: const Color(0xFFF5F5F0), // Light Gray
@@ -494,7 +492,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Dracula Theme
   static ThemeData draculaDarkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -532,7 +530,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF50FA7B), width: 1), // Green
+        borderSide:
+            const BorderSide(color: Color(0xFF50FA7B), width: 1), // Green
       ),
       filled: true,
       fillColor: const Color(0xFF44475A), // Current Line
@@ -553,7 +552,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Dracula Light Theme (adaptation)
   static ThemeData draculaLightTheme = ThemeData(
     brightness: Brightness.light,
@@ -591,7 +590,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF26A269), width: 1), // Green
+        borderSide:
+            const BorderSide(color: Color(0xFF26A269), width: 1), // Green
       ),
       filled: true,
       fillColor: const Color(0xFFF5F5F0), // Light Gray
@@ -612,7 +612,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Nord Theme
   static ThemeData nordDarkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -650,7 +650,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF88C0D0), width: 1), // Nord8
+        borderSide:
+            const BorderSide(color: Color(0xFF88C0D0), width: 1), // Nord8
       ),
       filled: true,
       fillColor: const Color(0xFF3B4252), // Nord1
@@ -671,7 +672,7 @@ class AppTheme {
     ),
     fontFamily: 'JetBrainsMono',
   );
-  
+
   // Nord Light Theme
   static ThemeData nordLightTheme = ThemeData(
     brightness: Brightness.light,
@@ -709,7 +710,8 @@ class AppTheme {
       border: _inputBorder,
       enabledBorder: _inputBorder,
       focusedBorder: _inputBorder.copyWith(
-        borderSide: const BorderSide(color: Color(0xFF5E81AC), width: 1), // Nord10
+        borderSide:
+            const BorderSide(color: Color(0xFF5E81AC), width: 1), // Nord10
       ),
       filled: true,
       fillColor: const Color(0xFFE5E9F0), // Nord5

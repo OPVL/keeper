@@ -1,70 +1,176 @@
-# Keeper - API Token Manager
+# 🔐 Keeper
 
-A macOS menu bar utility for managing API tokens, built with Flutter.
+> Because remembering API tokens is so last season.
 
-## Features
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/lloydculpepper/keeper)
+[![Flutter](https://img.shields.io/badge/flutter-3.6.0+-46D1FD.svg)](https://flutter.dev)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-- Securely store and manage API tokens
-- Display token validity status
-- Refresh expired tokens
-- Support for GitLab tokens (expandable to other services)
-- Menu bar integration for quick access
-- Configurable service settings (base URLs, etc.)
+## 🚀 Overview
 
-## Getting Started
+**Keeper** is a minimalist, programmer-friendly macOS menu bar utility for managing API tokens. It securely stores your tokens, handles automatic refreshing, and seamlessly integrates with Git repositories.
+
+```dart
+if (you.hate(managing_tokens)) {
+  keeper.solve(your_problems);
+}
+```
+
+## ✨ Features
+
+- **🔒 Secure Token Storage**: Keep your API tokens safe and organized
+- **🔄 Automatic Token Refreshing**: Never deal with expired tokens again
+- **🖥️ Menu Bar Integration**: Quick access without cluttering your workspace
+- **🌙 Multiple Theme Support**: Including classic terminal themes like Solarized, Monokai, Dracula, and Nord
+- **🔌 Git Repository Integration**: Automatically configure Git repositories with your tokens
+- **👤 Service-specific Usernames**: Maintain different identities for different services
+- **♿ Accessibility Features**: High contrast UI elements and semantic labels
+
+## 🛠️ Technical Details
+
+### Architecture
+
+Keeper is built with Flutter and follows a clean, modular architecture:
+
+- **Models**: Data structures for tokens, repositories, and settings
+- **Services**: Business logic for token management, Git integration, and settings
+- **UI**: Minimal, programmer-oriented interface with accessibility features
+
+### Token Management
+
+Tokens are stored locally with the following properties:
+- Name, service type, and value
+- Expiration date
+- Associated repositories
+- Refresh history
+
+### Supported Services
+
+- GitLab
+- GitHub
+- (More coming soon!)
+
+### Theme Support
+
+Keeper includes several classic terminal color schemes:
+- Default (Light/Dark)
+- Solarized (Light/Dark)
+- Monokai
+- Dracula
+- Nord
+
+## 📦 Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/lloydculpepper/keeper.git
+
+# Navigate to the project directory
+cd keeper
+
+# Install dependencies
+flutter pub get
+
+# Run the app
+flutter run
+```
+
+## 🧩 Usage
+
+### Adding a Token
+
+1. Click the Keeper icon in your menu bar
+2. Click the "+" button
+3. Select the service type
+4. Enter your token details
+5. Click "Save"
+
+### Linking a Git Repository
+
+1. Open a token's details
+2. Click "Add" in the Repositories section
+3. Select your Git repository folder
+4. Keeper will automatically configure the repository to use your token
+
+### Changing Themes
+
+1. Click the settings icon
+2. Select your preferred theme mode (Light/Dark/System)
+3. Choose a color palette from the available options
+
+## 🧪 Development
 
 ### Prerequisites
 
-- Flutter SDK (3.6.0 or higher)
-- Dart SDK (3.6.0 or higher)
-- macOS development environment
+- Flutter SDK 3.6.0+
+- Dart 3.0.0+
+- macOS 10.15+
 
-### Installation
+### Building from Source
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/keeper.git
-   cd keeper
-   ```
+```bash
+# Build the macOS app
+flutter build macos
 
-2. Install dependencies:
-   ```
-   flutter pub get
-   ```
+# The built app will be in build/macos/Build/Products/Release/
+```
 
-3. Run the application:
-   ```
-   flutter run -d macos
-   ```
+### Project Structure
 
-## Configuration
+```
+lib/
+├── main.dart              # Application entry point
+├── models/               # Data models
+│   ├── settings.dart     # App settings model
+│   └── token.dart        # Token and repository models
+├── services/             # Business logic
+│   ├── git_service.dart  # Git repository integration
+│   ├── service_factory.dart  # Service implementations
+│   ├── settings_service.dart # Settings management
+│   ├── theme_service.dart    # Theme management
+│   └── token_storage.dart    # Token persistence
+├── ui/                   # User interface
+│   ├── app_window.dart   # Main application window
+│   ├── common/           # Shared UI components
+│   ├── settings_page.dart # Settings screen
+│   └── token_details_page.dart # Token details screen
+└── utils/               # Utility functions
+    └── token_formatter.dart # Token formatting utilities
+```
 
-### Service Settings
+## 🤝 Contributing
 
-You can configure the base URLs for different services in the Settings page:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Click on the settings icon in the app or select "Settings" from the menu bar
-2. Expand a service to see its settings
-3. Update the base URL to match your instance (e.g., https://gitlab.example.com)
-4. Toggle services on/off as needed
+```dart
+// How to contribute
+if (you.have(new_feature) || you.found(bug)) {
+  fork();
+  fix();
+  pull_request();
+  // No promises, but we'll try to merge it faster than a token expires!
+}
+```
 
-## Architecture
+## 📝 License
 
-The application is structured as follows:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- **models/**: Data models for API tokens and settings
-- **services/**: Service classes for API integration and token storage
-- **ui/**: User interface components
+## 🙏 Acknowledgements
 
-## Adding New Services
+- [Flutter](https://flutter.dev) - For making cross-platform development less painful than token management
+- [window_manager](https://pub.dev/packages/window_manager) - For window management that doesn't make you pull your hair out
+- [tray_manager](https://pub.dev/packages/tray_manager) - For menu bar integration that actually works
 
-To add support for a new API service:
+## 💖 Support
 
-1. Create a new service class in `lib/services/`
-2. Add the service to the `ServiceType` enum in `service_factory.dart`
-3. Register the service in the `AppSettings.defaults()` method
-4. Implement the necessary methods for token validation and creation
+If you find this project helpful, consider buying me a coffee!
 
-## License
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/opvlmakesthings)
 
-This project is licensed under the MIT License - see the LICENSE file for details
+---
+
+<p align="center">Made with ❤️ and probably too much caffeine</p>
+<p align="center">
+  <img src="https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif" width="300" alt="Programming GIF">
+</p>

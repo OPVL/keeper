@@ -17,7 +17,7 @@ void main() async {
   // Set window options
   const windowOptions = WindowOptions(
     alwaysOnTop: true,
-    size: Size(400, 600),
+    size: Size(420, 580),
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: true, // Hide from taskbar/dock
