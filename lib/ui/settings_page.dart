@@ -378,17 +378,15 @@ class _SettingsPageState extends State<SettingsPage> {
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.person),
                       title: const Text('Author'),
-                      subtitle: const Text('Lloyd Culpepper'),
-                      onTap: () =>
-                          _launchUrl('https://github.com/lloydculpepper'),
+                      subtitle: const Text('OPVL'),
+                      onTap: () => _launchUrl('https://github.com/OPVL'),
                     ),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.code),
                       title: const Text('Source Code'),
                       subtitle: const Text('GitHub Repository'),
-                      onTap: () => _launchUrl(
-                          'https://github.com/lloydculpepper/keeper'),
+                      onTap: () => _launchUrl('https://github.com/OPVL/keeper'),
                     ),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
