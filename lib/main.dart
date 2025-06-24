@@ -168,7 +168,7 @@ class _KeeperAppState extends State<KeeperApp>
         Provider<app_theme.ThemeService>.value(value: _themeService),
       ],
       child: MaterialApp(
-        title: 'API Token Keeper',
+        title: 'Keeper',
         theme: themeData,
         debugShowCheckedModeBanner: false,
         home: Builder(

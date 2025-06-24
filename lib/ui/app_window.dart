@@ -161,7 +161,7 @@ class _AppWindowState extends State<AppWindow> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppHeader(
-        title: 'API Token Keeper',
+        title: 'Keeper',
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),

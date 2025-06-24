@@ -7,7 +7,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final double height;
   final bool showBackButton;
   final VoidCallback? onBackPressed;
-  
+
   const AppHeader({
     super.key,
     required this.title,
@@ -16,7 +16,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.showBackButton = false,
     this.onBackPressed,
   });
-  
+
   @override
   Size get preferredSize => Size.fromHeight(height);
 
@@ -44,14 +44,15 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 if (showBackButton)
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+                    onPressed:
+                        onBackPressed ?? () => Navigator.of(context).pop(),
                   ),
                 Text(
                   title,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -76,7 +77,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 class DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  
+
   const DetailRow({
     super.key,
     required this.label,
@@ -112,7 +113,7 @@ class SectionCard extends StatelessWidget {
   final String title;
   final List<Widget> children;
   final List<Widget> actions;
-  
+
   const SectionCard({
     super.key,
     required this.title,
@@ -151,7 +152,8 @@ class SectionCard extends StatelessWidget {
   }
 }
 
-void showAppNotification(BuildContext context, String message, {bool isError = false}) {
+void showAppNotification(BuildContext context, String message,
+    {bool isError = false}) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),

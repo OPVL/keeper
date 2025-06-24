@@ -25,7 +25,7 @@ class MenuBarManager {
         'assets/icons/tray_icon.png',
         isTemplate: true,
       );
-      await trayManager.setToolTip('API Token Keeper');
+      await trayManager.setToolTip('Keeper');
 
       // Update the menu
       await _updateMenu();
@@ -160,7 +160,7 @@ class MenuBarManager {
       // Destroy and recreate the tray icon to ensure a clean state
       await trayManager.destroy();
       await trayManager.setIcon('assets/icons/tray_icon.png', isTemplate: true);
-      await trayManager.setToolTip('API Token Keeper');
+      await trayManager.setToolTip('Keeper');
 
       // Get fresh tokens and build a new menu
       final List<ApiToken> tokens = await _tokenStorage.getTokens();
